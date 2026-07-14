@@ -4,3 +4,4 @@ project(neosysx LANGUAGES C CXX)
 
 add_subdirectory(libc)
 add_subdirectory(kernel)
+add_subdirectory(targets)

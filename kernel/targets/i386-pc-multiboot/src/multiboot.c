@@ -1,11 +1,11 @@
-#include <multiboot.h>
-#include <multiboot2.h> // include the official Multiboot2 header file
+#include <i386-pc-multiboot/multiboot.h>
+#include <i386-pc-multiboot/multiboot_spec.h> // include the official Multiboot header file
 
-/* Multiboot 2 header */
+/* Multiboot header */
 #define MULTIBOOT_FLAGS                             (MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO)
 __attribute__((section(".multiboot")))
 struct multiboot_header multiboot_header = {
-    .magic = MULTIBOOT2_HEADER_MAGIC,
+    .magic = MULTIBOOT_HEADER_MAGIC,
     .flags = MULTIBOOT_FLAGS,
-    .checksum = -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_FLAGS)
+    .checksum = -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_FLAGS)
 };

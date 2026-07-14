@@ -1,0 +1,4 @@
+default 0
+
+title Boot NeoSysX
+kernel /kernel.elf

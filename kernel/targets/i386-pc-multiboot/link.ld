@@ -11,7 +11,6 @@ SECTIONS {
         KEEP(*(.multiboot))
         __multiboot_end = .;
 
-        . = ALIGN(4K);
         __text_start = .;
         *(.text)
         __text_end = .;
