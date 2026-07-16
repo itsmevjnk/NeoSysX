@@ -4,7 +4,7 @@ add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/neosysx-grub2.iso"
 
     COMMAND ${CMAKE_COMMAND} -E make_directory "grub2-iso/boot/grub"
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:i386-pc-multiboot_kernel> "grub2-iso/boot/kernel.elf"
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:i386-pc-multiboot_kernel> "grub2-iso/kernel.elf"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/grub.cfg" "grub2-iso/boot/grub/grub.cfg"
     COMMAND grub-mkrescue -o "${CMAKE_CURRENT_BINARY_DIR}/neosysx-grub2.iso" "grub2-iso"
 
