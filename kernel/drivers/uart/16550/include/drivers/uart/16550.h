@@ -22,8 +22,8 @@ typedef struct {
     uint32_t baud_clk; // reference clock speed / 16 (Hz)
 
     /* read/write callbacks */
-    uint8_t (*read_cb)(uintptr_t); // uint8_t read_cb(uintptr_t reg)
-    void (*write_cb)(uintptr_t, uint8_t); // void write_cb(uintptr_t reg, uint8_t data)
+    uint8_t (*read_cb)(uintptr_t reg);
+    void (*write_cb)(uintptr_t reg, uint8_t data);
 } uart_16550_t;
 
 /* I/O helpers */

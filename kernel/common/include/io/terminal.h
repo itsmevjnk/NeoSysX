@@ -12,11 +12,11 @@ typedef struct {
     void* user;
 
     // NOTE: must be implemented as non-blocking
-    char (*read)(void*); 
-    void (*write)(void*, char);
+    char (*read)(void* user); 
+    void (*write)(void* user, char c);
 
-    bool (*read_available)(void*);
-    bool (*write_available)(void*);
+    bool (*read_available)(void* user);
+    bool (*write_available)(void* user);
 } terminal_t;
 
 void term_init(terminal_t* interface); // set terminal interface
@@ -36,4 +36,4 @@ bool term_write_available(void);
 size_t term_try_puts(const char* str);
 size_t term_try_putbuf(const char* buf, size_t length);
 
-#endif
+#endif /* __IO_TERMINAL_H */
