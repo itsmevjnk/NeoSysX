@@ -5,7 +5,10 @@
             "includePath": [
                 "${workspaceFolder}/**"
             ],
-            "defines": [],
+            "defines": [
+                "PRINTF_ALIAS_STANDARD_FUNCTION_NAMES_HARD=1",
+                "PRINTF_INCLUDE_CONFIG_H=1"
+            ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
             "cppStandard": "gnu++17",

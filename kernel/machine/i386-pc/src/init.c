@@ -4,7 +4,7 @@
 #include <cpu/i386/init.h>
 #include <drivers/uart/16550_pc.h>
 
-#include <io/terminal.h>
+#include <stdio.h>
 
 void kinit_machine_pre(void) {
     kinit_cpu_pre();
@@ -16,5 +16,5 @@ void kinit_machine_pre(void) {
 void kinit_machine_post(void) {
     kinit_cpu_post();
     
-    term_puts("Hello, World!\n");
+    puts("Hello, World!");
 }

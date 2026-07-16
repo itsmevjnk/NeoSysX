@@ -9,6 +9,7 @@ target_sources(
     $<TARGET_OBJECTS:bsp_cpu_i386>
     $<TARGET_OBJECTS:driver_uart_16550_pc>
     $<TARGET_OBJECTS:kernel_common>
+    $<TARGET_OBJECTS:libk>
 )
-target_link_libraries(bsp_machine_i386-pc PUBLIC bsp_cpu_i386 driver_uart_16550_pc kernel_common)
+target_link_libraries(bsp_machine_i386-pc PUBLIC bsp_cpu_i386 driver_uart_16550_pc kernel_common libk)
 target_include_directories(bsp_machine_i386-pc PUBLIC "include/")

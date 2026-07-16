@@ -7,4 +7,8 @@ target_sources(
     $<TARGET_OBJECTS:libk>
 )
 target_link_libraries(kernel_common PUBLIC libk)
+target_link_libraries(kernel_common PUBLIC gcc)
 target_include_directories(kernel_common PUBLIC "include/")
+
+add_library(kernel_common_headers INTERFACE)
+target_include_directories(kernel_common_headers INTERFACE "include/")
