@@ -1,5 +1,5 @@
 #include <machine/i386-pc/init.h>
-#include <panic.h>
+#include <kernel/panic.h>
 
 #include <cpu/i386/init.h>
 #include <drivers/uart/16550_pc.h>

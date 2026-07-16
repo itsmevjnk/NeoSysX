@@ -1,4 +1,4 @@
-#include <main.h>
+#include <kernel/main.h>
 
 /* placeholder */
 __attribute__((weak)) void kinit_target_pre(void) {

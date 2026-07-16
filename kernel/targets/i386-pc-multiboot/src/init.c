@@ -1,4 +1,4 @@
-#include <main.h>
+#include <kernel/main.h>
 #include <machine/i386-pc/init.h>
 
 void kinit_target_pre(void) {
