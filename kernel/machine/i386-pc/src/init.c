@@ -1,10 +1,9 @@
 #include <machine/i386-pc/init.h>
 #include <kernel/panic.h>
+#include <kernel/log.h>
 
 #include <cpu/i386/init.h>
 #include <drivers/uart/16550_pc.h>
-
-#include <stdio.h>
 
 void kinit_machine_pre(void) {
     kinit_cpu_pre();
@@ -16,5 +15,5 @@ void kinit_machine_pre(void) {
 void kinit_machine_post(void) {
     kinit_cpu_post();
     
-    puts("Hello, World!");
+    LOG_INFO("Hello, World!");
 }
