@@ -19,7 +19,7 @@ add_custom_target(
 )
 add_custom_target(
     i386-pc-multiboot_grub2_iso_qemu ALL
-    COMMAND qemu-system-i386 -cdrom "${CMAKE_CURRENT_BINARY_DIR}/neosysx-grub2.iso"
+    COMMAND qemu-system-i386 -serial stdio -cdrom "${CMAKE_CURRENT_BINARY_DIR}/neosysx-grub2.iso"
     COMMENT "Running QEMU emulation"
     DEPENDS i386-pc-multiboot_grub2_iso
 )
@@ -44,7 +44,7 @@ add_custom_target(
 )
 add_custom_target(
     i386-pc-multiboot_grub_iso_qemu ALL
-    COMMAND qemu-system-i386 -cdrom "${CMAKE_CURRENT_BINARY_DIR}/neosysx-grub.iso"
+    COMMAND qemu-system-i386 -serial stdio -cdrom "${CMAKE_CURRENT_BINARY_DIR}/neosysx-grub.iso"
     COMMENT "Running QEMU emulation"
     DEPENDS i386-pc-multiboot_grub_iso
 )
