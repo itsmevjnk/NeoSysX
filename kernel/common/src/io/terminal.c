@@ -7,38 +7,41 @@ void term_init(terminal_t* interface) {
 }
 
 void term_putc(char c) {
-    if (!term_current) return;
-    while (!term_current->write_available(term_current->user)); // TODO: yield
+    if (!term_current || !term_current->write) return;
+    if (term_current->write_available) {
+        while (!term_current->write_available(term_current->user)); // TODO: yield
+    }
     term_current->write(term_current->user, c);
 }
 
 char term_getc(void) {
-    if (!term_current) return 0;
+    if (!term_current || !term_current->read || !term_current->read_available) return 0;
     while (!term_current->read_available(term_current->user)); // TODO: yield
     return term_current->read(term_current->user);
 }
 
 bool term_try_putc(char c) {
-    if (!term_current) return false;
-    if (!term_current->write_available(term_current->user)) return false;
+    if (!term_current || !term_current->write) return false;
+    if (term_current->write_available && !term_current->write_available(term_current->user)) return false;
     term_current->write(term_current->user, c);
     return true;
 }
 
 bool term_try_getc(char* c_out) {
-    if (!term_current) return false;
+    if (!term_current || !term_current->read || !term_current->read_available) return false;
     if (!term_current->read_available(term_current->user)) return false;
     *c_out = term_current->read(term_current->user);
     return true;
 }
 
 bool term_read_available(void) {
-    if (!term_current) return false;
+    if (!term_current || !term_current->read_available) return false;
     return term_current->read_available(term_current->user);
 }
 
 bool term_write_available(void) {
     if (!term_current) return false;
+    if (!term_current->write_available) return true;
     return term_current->write_available(term_current->user);
 }
 
