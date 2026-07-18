@@ -8,9 +8,15 @@ stack_top:
 .global _start
 .extern _init
 .extern kmain
+.extern mb_info
 .type _start, @function
 _start:
     movl $stack_top, %esp
+
+    cmp $0x2BADB002, %eax
+    jne .init
+    movl %ebx, mb_info
+.init:
 
     call _init
     call kmain

@@ -3,10 +3,13 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <i386-pc-multiboot/multiboot_spec.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+void mb_print_mmap(void);
 
 #ifdef __cplusplus
 }
