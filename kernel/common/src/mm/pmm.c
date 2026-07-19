@@ -17,8 +17,8 @@ static size_t pmm_bitmap_sizes[PMM_LEVELS] = {0}; // NOTE: in size_t units, not 
 static uint64_t pmm_max_size = UINT64_MAX;
 
 /* expected from linker script */
-extern uintptr_t __kernel_start;
-extern uintptr_t __kernel_end;
+extern uintptr_t __kernel_phys_start;
+extern uintptr_t __kernel_phys_end;
 
 void pmm_init(void) {
     pmm_max_size = pmm_get_size();
@@ -44,7 +44,7 @@ void pmm_init(void) {
     LOG_DEBUG("theoretical max addr: 0x%llx, mem size: 0x%llx", max_addr, pmm_max_size);
     pmm_reserve(pmm_max_size, max_addr - pmm_max_size); // reserve unusable space beyond
     pmm_reserve(start_addr, bitmap_addr - start_addr); // also reserve bitmap space
-    pmm_reserve((uintptr_t)&__kernel_start, (uintptr_t)&__kernel_end - (uintptr_t)&__kernel_start); // reserve kernel space
+    pmm_reserve((uintptr_t)&__kernel_phys_start, (uintptr_t)&__kernel_phys_end - (uintptr_t)&__kernel_phys_start); // reserve kernel space
     pmm_target_init();
 }
 

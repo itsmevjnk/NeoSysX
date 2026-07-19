@@ -1,4 +1,6 @@
 #include <mm/pmm.h>
+#include <machine/i386-pc/pmm.h>
+#include <cpu/i386/pmm.h>
 #include <i386-pc-multiboot/multiboot.h>
 #include <string.h>
 #include <kernel/log.h>
@@ -16,61 +18,86 @@ uint64_t pmm_get_size(void) {
     return ret;
 }
 
-extern uintptr_t __kernel_end;
+__attribute__((section(".text.lh")))
+size_t pmm_get_size_lh(void) {
+    uint64_t ret = 0;
+    multiboot_info_t* mb_info_ptr_phys = *((multiboot_info_t**)((uintptr_t)&mb_info - 0xC0000000));
+    multiboot_info_t* mb_info_phys = (multiboot_info_t*)((uintptr_t)mb_info_ptr_phys - 0xC0000000);
+    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mb_info_phys->mmap_addr;
+    while (1) {
+        if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            uint64_t addr = ((uint64_t)mmap->addr_h << 32) | mmap->addr_l;
+            uint64_t size = ((uint64_t)mmap->len_h << 32) | mmap->len_l;
+            uint64_t end_addr = addr + size;
+            if (end_addr > ret) ret = end_addr;
+        }
 
-uintptr_t pmm_get_available_start(void) {
-    uintptr_t ret = (uintptr_t)&__kernel_end;
+        mmap = (multiboot_memory_map_t*)((uintptr_t)mmap + sizeof(mmap->size) + mmap->size);
+        if ((uintptr_t)mmap >= mb_info_phys->mmap_addr + mb_info_phys->mmap_length) break;
+    }
+    return ret;
+}
+
+extern uintptr_t __kernel_phys_end;
+
+__attribute__((section(".text.lh")))
+size_t strlen_lh(const char* str) {
+    // NOTE: we can instead call memchr(str, 0, SIZE_MAX)
+    size_t len = 0;
+    for (; str[len]; len++);
+    return len;
+}
+
+__attribute__((section(".text.lh")))
+void pmm_initialise_available_start(void) {
+    uintptr_t* avail_start = (uintptr_t*)((uintptr_t)&pmm_available_start - 0xC0000000);
+    *avail_start = (uintptr_t)&__kernel_phys_end;
+
+    multiboot_info_t* mb_info_ptr_phys = *((multiboot_info_t**)((uintptr_t)&mb_info - 0xC0000000));
+    multiboot_info_t* mb_info_phys = (multiboot_info_t*)((uintptr_t)mb_info_ptr_phys - 0xC0000000);
     
     /* Multiboot info structure */
-    uintptr_t mb_info_end = (uintptr_t)mb_info + sizeof(multiboot_info_t);
-    if (mb_info_end > ret) ret = mb_info_end;
+    uintptr_t mb_info_end = (uintptr_t)mb_info_phys + sizeof(multiboot_info_t);
+    if (mb_info_end > *avail_start) *avail_start = mb_info_end;
 
     /* command line */
-    if ((mb_info->flags & MULTIBOOT_INFO_CMDLINE) && mb_info->cmdline) {
-        const char* cmdline = (const char*)mb_info->cmdline;
-        uintptr_t cmdline_end = mb_info->cmdline + strlen(cmdline) + 1;
-        if (cmdline_end > ret) ret = cmdline_end;
+    if ((mb_info_phys->flags & MULTIBOOT_INFO_CMDLINE) && mb_info_phys->cmdline) {
+        const char* cmdline = (const char*)mb_info_phys->cmdline;
+        uintptr_t cmdline_end = mb_info_phys->cmdline + strlen_lh(cmdline) + 1;
+        if (cmdline_end > *avail_start) *avail_start = cmdline_end;
     }
 
     /* boot modules */
-    if ((mb_info->flags & MULTIBOOT_INFO_MODS) && mb_info->mods_addr && mb_info->mods_count) {
-        uintptr_t mods_end = mb_info->mods_addr + mb_info->mods_count * sizeof(multiboot_module_t);
-        if (mods_end > ret) ret = mods_end;
+    if ((mb_info_phys->flags & MULTIBOOT_INFO_MODS) && mb_info_phys->mods_addr && mb_info_phys->mods_count) {
+        uintptr_t mods_end = mb_info_phys->mods_addr + mb_info_phys->mods_count * sizeof(multiboot_module_t);
+        if (mods_end > *avail_start) *avail_start = mods_end;
 
-        const multiboot_module_t* module = (const multiboot_module_t*)mb_info->mods_addr;
-        for (size_t i = 0; i < mb_info->mods_count; i++, module++) {
-            if (module->mod_end > ret) ret = module->mod_end;
+        const multiboot_module_t* module = (const multiboot_module_t*)mb_info_phys->mods_addr;
+        for (size_t i = 0; i < mb_info_phys->mods_count; i++, module++) {
+            if (module->mod_end > *avail_start) *avail_start = module->mod_end;
             if (module->cmdline) {
                 const char* cmdline = (const char*)module->cmdline;
-                uintptr_t cmdline_end = module->cmdline + strlen(cmdline) + 1;
-                if (cmdline_end > ret) ret = cmdline_end;
+                uintptr_t cmdline_end = module->cmdline + strlen_lh(cmdline) + 1;
+                if (cmdline_end > *avail_start) *avail_start = cmdline_end;
             }
         }
     }
 
     /* memory map */
-    if ((mb_info->flags & MULTIBOOT_INFO_MEM_MAP) && mb_info->mmap_addr && mb_info->mmap_length) {
-        uintptr_t end = mb_info->mmap_addr + mb_info->mmap_length;
-        if (end > ret) ret = end;
+    if ((mb_info_phys->flags & MULTIBOOT_INFO_MEM_MAP) && mb_info_phys->mmap_addr && mb_info_phys->mmap_length) {
+        uintptr_t end = mb_info_phys->mmap_addr + mb_info_phys->mmap_length;
+        if (end > *avail_start) *avail_start = end;
     }
 
     /* drive info */
-    if ((mb_info->flags & MULTIBOOT_INFO_DRIVE_INFO) && mb_info->drives_addr && mb_info->drives_length) {
-        uintptr_t end = mb_info->drives_addr + mb_info->drives_length;
-        if (end > ret) ret = end;
+    if ((mb_info_phys->flags & MULTIBOOT_INFO_DRIVE_INFO) && mb_info_phys->drives_addr && mb_info_phys->drives_length) {
+        uintptr_t end = mb_info_phys->drives_addr + mb_info_phys->drives_length;
+        if (end > *avail_start) *avail_start = end;
     }
-
-    return ret;
 }
 
 void pmm_target_init(void) {
-    /* reserve BIOS-related memory regions in the first 1MB */
-    pmm_reserve(0x00000, 0x004FF - 0x00000 + 1); // real mode IVT and BDA
-    pmm_reserve(0x80000, 0x9FFFF - 0x80000 + 1); // EBDA
-    pmm_reserve(0xA0000, 0xBFFFF - 0xA0000 + 1); // video memory
-    pmm_reserve(0xC0000, 0xC7FFF - 0xC0000 + 1); // video BIOS
-    pmm_reserve(0xC8000, 0xEFFFF - 0xC8000 + 1); // BIOS expansions
-    pmm_reserve(0xF0000, 0xFFFFF - 0xF0000 + 1); // BIOS
+    pmm_machine_init();
 
     /* Multiboot info structure */
     LOG_DEBUG("reserving Multiboot info structure at 0x%lx (%lu bytes)", (uintptr_t)mb_info, sizeof(multiboot_info_t));
