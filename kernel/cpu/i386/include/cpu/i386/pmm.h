@@ -12,6 +12,6 @@ void pmm_cpu_init(void);
 
 /* to be implemented by target */
 void pmm_initialise_available_start(void); // must be executed and located in lower half
-size_t pmm_get_size_lh(void); // duplicate of pmm_get_size that must be executable in lower half
+uint64_t pmm_get_size_lh(void); // duplicate of pmm_get_size that must be executable in lower half
 
 #endif

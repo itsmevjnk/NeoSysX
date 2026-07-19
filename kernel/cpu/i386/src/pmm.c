@@ -19,10 +19,10 @@ size_t pmm_get_bitmap_size_lh(void) {
     uintptr_t bitmap_addr = start_addr;
     if (bitmap_addr & 0xFFF) bitmap_addr = (bitmap_addr & ~0xFFF) + 0x1000; // align start address
 
-    size_t mem_size = pmm_get_size_lh();
-    uintptr_t num_frames = mem_size >> 12; if (mem_size & 0xFFF) num_frames++;
-    for (int level = 0, bits = num_frames; level < PMM_LEVELS && bits; level++, bits = (bits + 1) >> 1) {
-        size_t level_size = (bits + SIZE_BITS - 1) / SIZE_BITS;
+    uint64_t mem_size = pmm_get_size_lh();
+    uint64_t num_frames = mem_size >> 12; if (mem_size & 0xFFF) num_frames++;
+    for (int level = 0; level < PMM_LEVELS && num_frames; level++, num_frames = (num_frames + 1) >> 1) {
+        size_t level_size = (num_frames + SIZE_BITS - 1) / SIZE_BITS;
         bitmap_addr += level_size * sizeof(size_t);
     }
 

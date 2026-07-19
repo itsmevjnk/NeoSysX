@@ -19,7 +19,7 @@ uint64_t pmm_get_size(void) {
 }
 
 __attribute__((section(".text.lh")))
-size_t pmm_get_size_lh(void) {
+uint64_t pmm_get_size_lh(void) {
     uint64_t ret = 0;
     multiboot_info_t* mb_info_ptr_phys = *((multiboot_info_t**)((uintptr_t)&mb_info - 0xC0000000));
     multiboot_info_t* mb_info_phys = (multiboot_info_t*)((uintptr_t)mb_info_ptr_phys - 0xC0000000);
