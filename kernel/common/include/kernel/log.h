@@ -27,4 +27,7 @@
     printf("\x1B[105;30mD\x1B[49;95m %llu.%06u\x1B[0m " fmt "\n", __ts / TIMER_TICK_1_SEC, (unsigned)(__ts % TIMER_TICK_1_SEC) / 1000, ##__VA_ARGS__); \
 } while(0)
 
+void ktrace(void); // print stack trace - to be implemented by CPU BSP
+void ktrace_from(const void* frame_addr); // print stack trace from the specified frame - to be implemented by CPU BSP
+
 #endif

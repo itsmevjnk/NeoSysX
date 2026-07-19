@@ -9,6 +9,10 @@ __attribute__((weak)) void exc_handler_stub(idt_handler_context_t* context, cons
     LOG_ERROR("DS=0x%04lx ES=0x%04lx FS=0x%04lx GS=0x%04lx", context->ds, context->es, context->fs, context->gs);
     LOG_ERROR("CS:EIP=0x%04lx:0x%08lx EFLAGS=0x%08lx", context->cs, context->eip, context->eflags);
     if ((context->cs & 0b11) == 0b11) LOG_ERROR("user SS:ESP=0x%04lx:%08lx", context->user_ss, context->user_esp);
+
+    LOG_DEBUG("stack trace:");
+    ktrace_from((const void*)context->ebp);
+
     kpanic();
 }
 
