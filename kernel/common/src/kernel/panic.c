@@ -2,7 +2,7 @@
 #include <kernel/log.h>
 #include <cpu/halt.h>
 
-void kpanic(void) {
+__attribute__((noreturn)) void kpanic(void) {
     // LOG_DEBUG("stack trace:");
     // ktrace();
 

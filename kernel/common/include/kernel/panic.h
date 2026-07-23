@@ -4,6 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void kpanic(void); // halt and catch fire
+__attribute__((noreturn)) void kpanic(void); // halt and catch fire
 
 #endif /* __KERNEL_PANIC_H */
