@@ -6,7 +6,8 @@ SECTIONS {
     . = 0x100000;
 
     /* LOWER HALF */
-    __kernel_lh_start = .;
+    __kernel_lh_phys_start = .;
+    __kernel_lh_start = . + 0xC0000000;
     .text.lh BLOCK(4K) : ALIGN(4K) {
         . = ALIGN(8);
         __multiboot_start = .;
@@ -17,12 +18,8 @@ SECTIONS {
         *(.text.lh)
         __text_lh_end = .;
     }
-    .data.lh BLOCK(4K) : ALIGN(4K) {
-        __data_lh_start = .;
-        *(.data.lh)
-        __data_lh_end = .;
-    }
-    __kernel_lh_end = .;
+    __kernel_lh_phys_end = .;
+    __kernel_lh_end = . + 0xC0000000;
 
     . += 0xC0000000;
 

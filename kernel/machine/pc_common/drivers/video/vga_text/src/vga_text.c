@@ -2,19 +2,21 @@
 #include <cpu/x86_common/io.h>
 #include <string.h>
 
-volatile uint16_t* vga_text_buffer = (volatile uint16_t*)0xB8000;
-// TODO: change this when we eventually move to higher half
+uint16_t* vga_text_buffer = NULL;
 
 void vga_text_clear(void) {
+    if (!vga_text_buffer) return;
     memset((void*)vga_text_buffer, 0, VGA_TEXT_WIDTH * VGA_TEXT_HEIGHT * 2);
 }
 
 void vga_text_scroll_up(uint8_t lines) {
+    if (!vga_text_buffer) return;
     memmove((void*)vga_text_buffer, (void*)&vga_text_buffer[lines * VGA_TEXT_WIDTH], (VGA_TEXT_HEIGHT - lines) * VGA_TEXT_WIDTH * 2);
     memset((void*)&vga_text_buffer[(VGA_TEXT_HEIGHT - lines) * VGA_TEXT_WIDTH], 0, lines * VGA_TEXT_WIDTH * 2);
 }
 
 void vga_text_putc_at(uint8_t x, uint8_t y, char c, uint8_t attrib) {
+    if (!vga_text_buffer) return;
     vga_text_buffer[y * VGA_TEXT_WIDTH + x] = (uint16_t)c | ((uint16_t)attrib << 8);
 }
 
@@ -26,7 +28,9 @@ void vga_text_putc_at(uint8_t x, uint8_t y, char c, uint8_t attrib) {
 #define VGA_TEXT_CURSOR_END 15
 #endif /* VGA_TEXT_CURSOR_END */
 
-void vga_text_init(bool bg16) {
+void vga_text_init(void* buffer_ptr, bool bg16) {
+    vga_text_buffer = (uint16_t*)buffer_ptr;
+
     /* configure BLINK */
     inb(0x3DA);
     uint8_t adr_val = inb(0x3C0);

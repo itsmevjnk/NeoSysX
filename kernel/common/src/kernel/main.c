@@ -2,6 +2,7 @@
 #include <kernel/log.h>
 
 #include <mm/pmm.h>
+#include <mm/vmm.h>
 
 /* placeholder */
 __attribute__((weak)) void kinit_target_pre(void) {
@@ -18,6 +19,7 @@ void kmain(void) {
 
     // TODO: initialise kernel
     pmm_init();
+    vmm_init();
     
     LOG_DEBUG("entering kinit_target_post");
     kinit_target_post();

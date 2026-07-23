@@ -8,7 +8,7 @@
 #include <io/terminal.h>
 #include <io/ansi_terminal.h>
 
-extern volatile uint16_t* vga_text_buffer;
+extern uint16_t* vga_text_buffer;
 
 #define VGA_TEXT_WIDTH                      80
 #define VGA_TEXT_HEIGHT                     25
@@ -55,7 +55,7 @@ extern volatile uint16_t* vga_text_buffer;
 
 #define VGA_TEXT_BLINK                      (1 << 7) // only available if bg16 == false in vga_text_init
 
-void vga_text_init(bool bg16);
+void vga_text_init(void* buffer_ptr, bool bg16);
 void vga_text_clear(void);
 void vga_text_scroll_up(uint8_t lines);
 void vga_text_putc_at(uint8_t x, uint8_t y, char c, uint8_t attrib);

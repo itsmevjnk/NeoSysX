@@ -6,7 +6,7 @@
 .extern stack_top
 .extern kinit_target_lh
 .extern vmm_lh_init
-.extern vmm_kernel_struct
+.extern vmm_kernel_config
 .type _start_lh, @function
 _start_lh:
     movl $(stack_top - 0xC0000000), %esp # set stack to the space that we manage
@@ -19,7 +19,7 @@ _start_lh:
     call vmm_lh_init
 
     # enable paging
-    movl $(vmm_kernel_struct - 0xC0000000), %eax
+    movl $(vmm_kernel_config - 0xC0000000), %eax
     movl %eax, %cr3
     movl %cr4, %eax
     orl $(1 << 4), %eax # enable PSE bit for 4MB pages

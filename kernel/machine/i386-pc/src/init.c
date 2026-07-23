@@ -19,7 +19,7 @@ void kinit_machine_pre(void) {
     if (!uart_16550_pc_probe()) kpanic();
     // uart_16550_pc_init_terminal();
 
-    vga_text_init(true);
+    vga_text_init((void*)0xC00B8000, true); // higher-half mapped VGA text buffer
     vga_text_init_terminal(true);
     
     pic_init();

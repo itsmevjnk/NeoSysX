@@ -51,14 +51,24 @@ typedef struct {
 } __attribute__((packed)) vmm_pt_entry_t;
 
 
-typedef struct {
+typedef struct vmm_config {
     vmm_pd_entry_t pd[1024]; // page directory
     vmm_pt_entry_t* pt[1024]; // corresponding page tables
     uint32_t cr3; // page directory physical address
-} __attribute__((packed)) vmm_info_t;
+    struct vmm_config* next; // next config in linked list (the head being vmm_kernel_config)
+    uint16_t pt_used[1024]; // allocated pages count per PDE/PT
+} __attribute__((packed)) vmm_config_t;
+
+extern vmm_config_t vmm_kernel_config;
+extern vmm_config_t* vmm_current_config;
 
 void vmm_reserve_initial_pt(void);
 
 void kinit_target_lh(void); // to be implemented by target - called by _start_lh
+void vmm_target_init(void); // to be implemented by target - called by vmm_init before removing identity mapping
+
+static inline void vmm_invalidate_page(uintptr_t addr) {
+    __asm__ volatile ("invlpg (%0)" : : "b"(addr) : "memory");
+}
 
 #endif /* __CPU_I386_VMM_H */
