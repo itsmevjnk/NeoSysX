@@ -1,5 +1,6 @@
 #include <kernel/main.h>
 #include <kernel/log.h>
+#include <cpu/halt.h>
 
 #include <mm/pmm.h>
 #include <mm/vmm.h>
@@ -25,5 +26,7 @@ void kmain(void) {
     kinit_target_post();
 
     LOG_INFO("kernel init complete");
-    while (1);
+    while (1) { // in case we're woken by interrupt
+        cpu_halt();
+    }
 }

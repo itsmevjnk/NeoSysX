@@ -1,7 +1,13 @@
 #include <kernel/panic.h>
 #include <kernel/log.h>
+#include <cpu/halt.h>
+
 void kpanic(void) {
     // LOG_DEBUG("stack trace:");
     // ktrace();
-    while (1);
+
+    LOG_ERROR("kpanic() invoked");
+    while (1) {
+        cpu_halt();
+    }
 }
