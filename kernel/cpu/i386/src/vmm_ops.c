@@ -21,6 +21,13 @@ void* vmm_get_kernel_config(void) {
 
 extern uintptr_t __kernel_end;
 
+#define VMM_PD_ENTRIES 1024
+#define VMM_PD_SIZE (VMM_PD_ENTRIES * sizeof(vmm_pd_entry_t))
+#define VMM_PT_ENTRIES 1024
+#define VMM_PT_SIZE (VMM_PT_ENTRIES * sizeof(vmm_pt_entry_t))
+
+#define KERNEL_PDE_START                        (0xC0000000 >> 22)
+
 void* vmm_new_config(void* source) {
     vmm_config_t* config = (vmm_config_t*)vmm_alloc_kernel(sizeof(vmm_config_t), VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL | VMM_FLAG_ALLOC_CONTIGUOUS, (uintptr_t)&__kernel_end);
     if (!config) return NULL;
@@ -28,13 +35,53 @@ void* vmm_new_config(void* source) {
     bool paddr_success = vmm_get_paddr_kernel((uintptr_t)&config->pd, &cr3);
     if (!paddr_success || cr3 > UINT32_MAX) {
         vmm_unmap_kernel((uintptr_t)config, sizeof(vmm_config_t));
+        pmm_free(cr3, sizeof(vmm_config_t));
         return NULL;
     }
     config->cr3 = cr3;
     config->next = vmm_kernel_config.next;
     vmm_kernel_config.next = config;
+    
+    memset((void*)config, 0, sizeof(vmm_config_t));
 
-    (void)source; // TODO: clone VMM config
+    /* clone kernel address space */
+    memcpy(&config->pd[KERNEL_PDE_START], &vmm_kernel_config.pd[KERNEL_PDE_START], (VMM_PD_ENTRIES - KERNEL_PDE_START) * sizeof(vmm_pd_entry_t));
+    memcpy(&config->pt[KERNEL_PDE_START], &vmm_kernel_config.pt[KERNEL_PDE_START], (VMM_PD_ENTRIES - KERNEL_PDE_START) * sizeof(vmm_pt_entry_t*));
+    memcpy(&config->pt_used[KERNEL_PDE_START], &vmm_kernel_config.pt_used[KERNEL_PDE_START], (VMM_PD_ENTRIES - KERNEL_PDE_START) * sizeof(uint16_t));
+
+    /* clone user address space */
+    if (source) {
+        vmm_config_t* src_config = (vmm_config_t*)source;
+        for (size_t pde = 0; pde < KERNEL_PDE_START; pde++) {
+            if (!src_config->pd[pde].val) continue;
+            config->pd[pde].val = src_config->pd[pde].val; // copy all PDE fields over first
+            if (!config->pd[pde].large.size) { // small page - clone the corresponding PT
+                config->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel(VMM_PT_ENTRIES * sizeof(vmm_pt_entry_t), VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL | VMM_FLAG_ALLOC_CONTIGUOUS, (uintptr_t)&__kernel_end);
+                bool success = config->pt[pde] != NULL;
+                if (success) { // allocated - now get the physical address and insert into the PDE
+                    uint64_t paddr = ~0;
+                    paddr_success = vmm_get_paddr_kernel((uintptr_t)config->pt[pde], &paddr);
+                    if (paddr_success || paddr > UINT32_MAX) {
+                        success = false;
+                    } else {
+                        config->pd[pde].small.pt_paddr = paddr >> 12;
+                    }
+                }
+                if (!success) { // allocation failure
+                    for (size_t i = 0; i <= pde; i++) {
+                        if (!config->pt[i]) continue;
+                        vmm_unmap_kernel((uintptr_t)config->pt[i], VMM_PT_ENTRIES * sizeof(vmm_pt_entry_t));
+                        pmm_free(config->pd[i].small.pt_paddr << 12, VMM_PT_ENTRIES * sizeof(vmm_pt_entry_t));
+                    }
+
+                    vmm_unmap_kernel((uintptr_t)config, sizeof(vmm_config_t));
+                    pmm_free(cr3, sizeof(vmm_config_t));
+                    return NULL;
+                }
+            }
+        }
+        memcpy(&config->pt_used, &src_config->pt_used, KERNEL_PDE_START * sizeof(uint16_t));
+    }
 
     return (void*)config;
 }
@@ -48,8 +95,6 @@ void vmm_delete_config(void* config) {
     pmm_free(paddr, sizeof(vmm_config_t));
 }
 
-#define KERNEL_PDE_START                        (0xC0000000 >> 22)
-
 static inline void vmm_propagate_pde(vmm_config_t* config, size_t pde) {
     vmm_config_t* dest = &vmm_kernel_config;
     for (; dest; dest = dest->next) {
@@ -60,11 +105,6 @@ static inline void vmm_propagate_pde(vmm_config_t* config, size_t pde) {
         }
     }
 }
-
-#define VMM_PD_ENTRIES 1024
-#define VMM_PD_SIZE (VMM_PD_ENTRIES * sizeof(vmm_pd_entry_t))
-#define VMM_PT_ENTRIES 1024
-#define VMM_PT_SIZE (VMM_PT_ENTRIES * sizeof(vmm_pt_entry_t))
 
 size_t vmm_map(void* config, uint64_t paddr, uintptr_t vaddr, size_t size, size_t flags) {
     if ((paddr & 0xFFF) || (vaddr & 0xFFF)) {
