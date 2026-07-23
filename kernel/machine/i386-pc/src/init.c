@@ -10,7 +10,7 @@
 #include <drivers/video/vga_text.h>
 
 #ifndef PIT_DESIRED_TICK_FREQ
-#define PIT_DESIRED_TICK_FREQ                           29102 // other good values are 41, 82, 14551 and 596591 (probably too high though)
+#define PIT_DESIRED_TICK_FREQ                           1000 // good values are 41, 82, 14551, 29102 and 596591 (probably too high though)
 #endif
 
 void kinit_machine_pre(void) {

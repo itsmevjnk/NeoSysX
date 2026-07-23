@@ -1,4 +1,5 @@
 #include <timing/timer.h>
+#include <cpu/halt.h>
 
 static volatile uint64_t timer_ticks = 0;
 
@@ -15,9 +16,9 @@ void timer_reset(uint64_t tick) {
 }
 
 void timer_stall(uint64_t duration) {
-    uint64_t t_end = timer_ticks + duration;
+    volatile uint64_t t_end = timer_ticks + duration;
     if (t_end < timer_ticks) { // rollover
-        while (timer_ticks > 0); // wait until timer ticks go back to 0
+        while (timer_ticks > 0) cpu_halt(); // wait until timer ticks go back to 0
     }
-    while (timer_ticks < t_end); // wait until it reaches t_end
+    while (timer_ticks < t_end) cpu_halt(); // wait until it reaches t_end
 }
