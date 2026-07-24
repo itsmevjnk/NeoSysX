@@ -94,6 +94,8 @@ void pmm_initialise_available_start(void) {
         uintptr_t end = mb_info_phys->drives_addr + mb_info_phys->drives_length;
         if (end > *avail_start) *avail_start = end;
     }
+
+    *avail_start += 0xC0000000;
 }
 
 void pmm_target_init(void) {

@@ -10,7 +10,7 @@ __attribute__((section(".text.lh")))
 void vmm_lh_init(void) {
     pmm_initialise_available_start();
 
-    uintptr_t pt_paddr = *((uintptr_t*)((uintptr_t)&pmm_available_start - 0xC0000000)) + pmm_get_bitmap_size_lh(); // physical address of next page table to be allocated
+    uintptr_t pt_paddr = *((uintptr_t*)((uintptr_t)&pmm_available_start - 0xC0000000)) + pmm_get_bitmap_size_lh() - 0xC0000000; // physical address of next page table to be allocated
     vmm_config_t* vmm_info = (vmm_config_t*)((uintptr_t)&vmm_kernel_config - 0xC0000000);
 
     /* map physical address to both lower and higher halves, we'll unmap the lower half once we're in higher half */
