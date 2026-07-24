@@ -216,7 +216,7 @@ void vmm_unmap(void* config, uintptr_t vaddr, size_t size) {
 
     size_t unmapped_size = 0;
     size_t vaddr_end = vaddr + size;
-    while(unmapped_size < size) {
+    while (unmapped_size < size) {
         size_t pde = vaddr >> 22, pte = (vaddr >> 12) & 0x3FF;
 
         if (!cfg->pd[pde].val) { // entire PDE is not mapped
@@ -232,8 +232,6 @@ void vmm_unmap(void* config, uintptr_t vaddr, size_t size) {
                 cfg->pd[pde].val = 0;
                 cfg->pt_used[pde] = 0;
                 // NOTE: cfg->pt[pde] should already be null here
-
-                if (pde >= KERNEL_PDE_START) vmm_propagate_pde(cfg, pde); // propagate kernel pages
             } else { // convert to small pages
                 cfg->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel_addrspace(VMM_PT_SIZE, VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL);
                 if (!cfg->pt[pde]) break; // TODO
@@ -277,16 +275,11 @@ void vmm_unmap(void* config, uintptr_t vaddr, size_t size) {
                 cfg->pd[pde].small.user = 1; // whether this page is actually user is controlled by the PT
 
                 cfg->pt_used[pde] = 1024 - (to_pte - from_pte + 1);
-                
-                if (pde >= KERNEL_PDE_START)
-                    vmm_propagate_pde(cfg, pde);
-                
-                uintptr_t next_vaddr = ((pde + 1) << 22); // address of beginning of next PDE
-                unmapped_size += next_vaddr - vaddr;
-                vaddr = next_vaddr;
-
-                if (pde >= KERNEL_PDE_START) vmm_propagate_pde(cfg, pde); // propagate kernel pages
             }
+                
+            unmapped_size += next_vaddr - vaddr;
+            vaddr = next_vaddr;
+            if (pde >= KERNEL_PDE_START) vmm_propagate_pde(cfg, pde); // propagate kernel pages
         } else { // small pages in use here
             // NOTE: cfg->pt[pde] should be non-null here
             uint8_t global = cfg->pt[pde][pte].global;
@@ -306,6 +299,9 @@ void vmm_unmap(void* config, uintptr_t vaddr, size_t size) {
                 cfg->pd[pde].val = 0; cfg->pt[pde] = NULL;
                 propagate = true;
             }
+
+            unmapped_size += 0x1000;
+            vaddr += 0x1000;
             if (propagate && pde >= KERNEL_PDE_START)
                 vmm_propagate_pde(cfg, pde);
         }
