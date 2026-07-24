@@ -4,6 +4,7 @@
 #include <cpu/intr.h>
 
 #include <cpu/i386/init.h>
+#include <drivers/acpi/acpi.h>
 #include <drivers/intr/i8259.h>
 #include <drivers/timer/i8253.h>
 #include <drivers/uart/16550_pc.h>
@@ -29,6 +30,8 @@ void kinit_machine_pre(void) {
 
 void kinit_machine_post(void) {
     kinit_cpu_post();
+
+    acpi_init();
     
     LOG_INFO("Hello, World!");
 }

@@ -13,6 +13,8 @@ target_sources(
     $<TARGET_OBJECTS:driver_timer_i8253>
     $<TARGET_OBJECTS:kernel_common>
     $<TARGET_OBJECTS:libk>
+    $<TARGET_OBJECTS:driver_acpi_pc>
+    $<TARGET_OBJECTS:driver_acpi_uacpi>
 )
-target_link_libraries(bsp_machine_i386-pc PUBLIC bsp_cpu_i386 driver_uart_16550_pc driver_video_vga_text driver_intr_i8259 driver_timer_i8253 kernel_common libk)
+target_link_libraries(bsp_machine_i386-pc PUBLIC bsp_cpu_i386 driver_uart_16550_pc driver_video_vga_text driver_intr_i8259 driver_timer_i8253 kernel_common libk driver_acpi_pc driver_acpi_uacpi)
 target_include_directories(bsp_machine_i386-pc PUBLIC "include/")
