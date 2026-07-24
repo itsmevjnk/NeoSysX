@@ -126,3 +126,36 @@ uintptr_t vmm_find_free(void* config, uintptr_t from_vaddr, size_t size) {
         else iter_vaddr += frame_size;
     }
 }
+
+uintptr_t vmm_map_paddr(void* config, uintptr_t paddr, uintptr_t from_vaddr, size_t size, size_t flags) {
+    size_t frame_size = pmm_get_frame_size();
+    size_t remainder = paddr % frame_size;
+    if (remainder) {
+        paddr -= remainder;
+        size += remainder;
+    }
+
+    uintptr_t vaddr = vmm_find_free(config, from_vaddr, size);
+    if (vaddr == UINTPTR_MAX) return UINTPTR_MAX;
+
+    vmm_map(config, paddr, vaddr, size, flags);
+    return vaddr + remainder;
+}
+
+uintptr_t vmm_map_paddr_current(uintptr_t paddr, uintptr_t from_vaddr, size_t size, size_t flags) {
+    return vmm_map_paddr(vmm_get_current_config(), paddr, from_vaddr, size, flags);
+}
+
+uintptr_t vmm_map_paddr_kernel(uintptr_t paddr, uintptr_t from_vaddr, size_t size, size_t flags) {
+    return vmm_map_paddr(vmm_get_kernel_config(), paddr, from_vaddr, size, flags);
+}
+
+extern uintptr_t __kernel_end;
+
+uintptr_t vmm_map_paddr_kernel_addrspace(uintptr_t paddr, size_t size, size_t flags) {
+    return vmm_map_paddr_kernel(paddr, (uintptr_t)&__kernel_end, size, flags);
+}
+
+uintptr_t vmm_alloc_kernel_addrspace(size_t size, size_t flags) {
+    return vmm_alloc_kernel(size, flags, (uintptr_t)&__kernel_end);
+}

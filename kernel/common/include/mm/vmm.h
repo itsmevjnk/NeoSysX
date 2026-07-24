@@ -25,9 +25,15 @@ bool vmm_is_vaddr_used_kernel(uintptr_t vaddr);
 uintptr_t vmm_find_free_current(uintptr_t from_vaddr, size_t size);
 uintptr_t vmm_find_free_kernel(uintptr_t from_vaddr, size_t size);
 
+uintptr_t vmm_map_paddr(void* config, uintptr_t paddr, uintptr_t from_vaddr, size_t size, size_t flags);
+uintptr_t vmm_map_paddr_current(uintptr_t paddr, uintptr_t from_vaddr, size_t size, size_t flags);
+uintptr_t vmm_map_paddr_kernel(uintptr_t paddr, uintptr_t from_vaddr, size_t size, size_t flags);
+uintptr_t vmm_map_paddr_kernel_addrspace(uintptr_t paddr, size_t size, size_t flags);
+
 uintptr_t vmm_alloc(void* config, size_t size, size_t flags, uintptr_t from_vaddr);
 uintptr_t vmm_alloc_current(size_t size, size_t flags, uintptr_t from_vaddr);
 uintptr_t vmm_alloc_kernel(size_t size, size_t flags, uintptr_t from_vaddr);
+uintptr_t vmm_alloc_kernel_addrspace(size_t size, size_t flags);
 
 void vmm_free_pmm_frames(void* config, uintptr_t vaddr, size_t size);
 void vmm_free_pmm_frames_current(uintptr_t vaddr, size_t size);

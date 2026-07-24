@@ -19,8 +19,6 @@ void* vmm_get_kernel_config(void) {
     return (void*)&vmm_kernel_config;
 }
 
-extern uintptr_t __kernel_end;
-
 #define VMM_PD_ENTRIES 1024
 #define VMM_PD_SIZE (VMM_PD_ENTRIES * sizeof(vmm_pd_entry_t))
 #define VMM_PT_ENTRIES 1024
@@ -29,7 +27,7 @@ extern uintptr_t __kernel_end;
 #define KERNEL_PDE_START                        (0xC0000000 >> 22)
 
 void* vmm_new_config(void* source) {
-    vmm_config_t* config = (vmm_config_t*)vmm_alloc_kernel(sizeof(vmm_config_t), VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL | VMM_FLAG_ALLOC_CONTIGUOUS, (uintptr_t)&__kernel_end);
+    vmm_config_t* config = (vmm_config_t*)vmm_alloc_kernel_addrspace(sizeof(vmm_config_t), VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL | VMM_FLAG_ALLOC_CONTIGUOUS);
     if (!config) return NULL;
     uint64_t cr3 = ~0;
     bool paddr_success = vmm_get_paddr_kernel((uintptr_t)&config->pd, &cr3);
@@ -56,7 +54,7 @@ void* vmm_new_config(void* source) {
             if (!src_config->pd[pde].val) continue;
             config->pd[pde].val = src_config->pd[pde].val; // copy all PDE fields over first
             if (!config->pd[pde].large.size) { // small page - clone the corresponding PT
-                config->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel(VMM_PT_ENTRIES * sizeof(vmm_pt_entry_t), VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL | VMM_FLAG_ALLOC_CONTIGUOUS, (uintptr_t)&__kernel_end);
+                config->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel_addrspace(VMM_PT_ENTRIES * sizeof(vmm_pt_entry_t), VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL | VMM_FLAG_ALLOC_CONTIGUOUS);
                 bool success = config->pt[pde] != NULL;
                 if (success) { // allocated - now get the physical address and insert into the PDE
                     uint64_t paddr = ~0;
@@ -147,7 +145,7 @@ size_t vmm_map(void* config, uint64_t paddr, uintptr_t vaddr, size_t size, size_
         } else {
             bool propagate = false;
             if (!cfg->pt[pde]) { // no page table here
-                cfg->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel(VMM_PT_SIZE, VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL, (uintptr_t)&__kernel_end);
+                cfg->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel_addrspace(VMM_PT_SIZE, VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL);
                 if (!cfg->pt[pde]) break;
 
                 uint64_t pt_paddr;
@@ -237,7 +235,7 @@ void vmm_unmap(void* config, uintptr_t vaddr, size_t size) {
 
                 if (pde >= KERNEL_PDE_START) vmm_propagate_pde(cfg, pde); // propagate kernel pages
             } else { // convert to small pages
-                cfg->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel(VMM_PT_SIZE, VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL, (uintptr_t)&__kernel_end);
+                cfg->pt[pde] = (vmm_pt_entry_t*)vmm_alloc_kernel_addrspace(VMM_PT_SIZE, VMM_FLAG_RW | VMM_FLAG_CACHE_GLOBAL);
                 if (!cfg->pt[pde]) break; // TODO
 
                 uint64_t pt_paddr;
