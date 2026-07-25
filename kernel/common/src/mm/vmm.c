@@ -72,7 +72,7 @@ uintptr_t vmm_alloc(void* config, size_t size, size_t flags, uintptr_t from_vadd
                 return 0;
             }   
             allocated_size += iter_size;
-            vmm_map(config, paddr, next_vaddr, frame_size, flags & ~VMM_FLAG_ALLOC_CONTIGUOUS);
+            vmm_map(config, paddr, next_vaddr, iter_size, flags & ~VMM_FLAG_ALLOC_CONTIGUOUS);
             next_vaddr += iter_size;    
             if (remaining_size <= iter_size) break;
             remaining_size -= iter_size;
