@@ -116,7 +116,7 @@ size_t vmm_map(void* config, uint64_t paddr, uintptr_t vaddr, size_t size, size_
     if (!cfg) return 0;
     for (; mapped_size < size; mapped_size += 0x1000, paddr += 0x1000, vaddr += 0x1000) {
         size_t pde = vaddr >> 22, pte = (vaddr >> 12) & 0x3FF;
-        bool large_eligible = !pte && (mapped_size - size >= 0x400000); // whether this region can be mapped as a large page
+        bool large_eligible = !pte && (size - mapped_size >= 0x400000); // whether this region can be mapped as a large page
         
         if (large_eligible) { // map as 4M page
             if (cfg->pt[pde]) { // there's already a table here
