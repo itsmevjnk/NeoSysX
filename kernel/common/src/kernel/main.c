@@ -5,6 +5,7 @@
 #include <mm/pmm.h>
 #include <mm/vmm.h>
 
+#include <liballoc.h>
 /* placeholder */
 __attribute__((weak)) void kinit_target_pre(void) {
 
@@ -21,6 +22,7 @@ void kmain(void) {
     // TODO: initialise kernel
     pmm_init();
     vmm_init();
+    liballoc_init();
     
     LOG_DEBUG("entering kinit_target_post");
     kinit_target_post();

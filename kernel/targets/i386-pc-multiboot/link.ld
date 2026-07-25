@@ -62,4 +62,6 @@ SECTIONS {
 
     __kernel_end = .;
     __kernel_phys_end = . - 0xC0000000;
+
+    __kheap_start = 0xF0000000;
 }
