@@ -120,6 +120,9 @@ idt_handler_asmstub:
     call idt_handler_stub # pass to C code
     add $4, %esp
 
+.global idt_restore_ctx
+.type idt_restore_ctx, @function
+idt_restore_ctx:
     # pop FPU state
     popl %edi # EDI = fsave_buf pointer containing FPU state pushed previously
     movl fpu_mode, %eax
