@@ -11,17 +11,17 @@ thread_switch:
 
     cli # NO MORE INTERRUPTS HERE!!!!!!!!! (we will get interrupts back after IRET)
 
-    movl %ecx, 8(%ebp) # thread to switch to
-    movl %edx, 12(%ebp) # current thread's IDT context
+    movl 8(%ebp), %ecx # thread to switch to
+    movl 12(%ebp), %edx # current thread's IDT context
 
     movl thread_current, %eax
     cmpl $0, %eax
     jz .first_save
 .save_ctx: # save context for thread_current
-    movl 16(%eax), %edx
+    movl %edx, 16(%eax)
     jmp .save_done
 .first_save: # special case - save context into kernel thread (which is also passed in ECX)
-    movl 16(%ecx), %edx
+    movl %edx, 16(%ecx)
 .save_done:
     movl %ecx, thread_current # update current thread
 
