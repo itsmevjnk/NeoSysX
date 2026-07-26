@@ -65,6 +65,7 @@ idt_handler_noerr 31
 # IDT handler stub
 .align 16
 .extern idt_handler_stub
+.extern fpu_mode
 .type idt_handler_asmstub, @function
 idt_handler_asmstub:
     pushal # push EAX..EDI
@@ -86,9 +87,57 @@ idt_handler_asmstub:
     mov %ax, %fs
     mov %ax, %gs
 
+    # push FPU state
+    subl $(464 + 16), %esp # reserve space for fsave_buf
+    movl %esp, %edi # EDI = fsave_buf pointer
+    movl fpu_mode, %eax
+    cmpl $2, %eax
+    je .fxsave
+    cmpl $1, %eax
+    je .fsave
+    # unsupported
+    pushl $0 # fsave_ptr = 0
+    jmp .fpu_save_done
+
+.fxsave: # use FXSAVE
+    test $0b1111, %edi # check if the start of fsave_buf is aligned already
+    jz .fxsave_aligned
+    # make EDI 16-byte aligned
+    andl $(~0b1111), %edi
+    addl $0x10, %edi
+.fxsave_aligned:
+    fxsave (%edi)
+    jmp .save_fsave_buf_addr
+
+.fsave: # use FSAVE
+    fsave (%edi)
+
+.save_fsave_buf_addr:
+    pushl %edi # save address
+.fpu_save_done:
+
     pushl %esp
     call idt_handler_stub # pass to C code
     add $4, %esp
+
+    # pop FPU state
+    popl %edi # EDI = fsave_buf pointer containing FPU state pushed previously
+    movl fpu_mode, %eax
+    cmpl $2, %eax
+    je .fxrstor
+    cmpl $1, %eax
+    je .frstor
+    # unsupported
+    pushl $0 # fsave_ptr = 0
+    jmp .fpu_restore_done
+.fxrstor:
+    fxrstor (%edi)
+    jmp .fpu_restore_done
+.frstor:
+    frstor (%edi)
+
+.fpu_restore_done:
+    addl $(464 + 16), %esp
 
     popl %eax
     mov %ax, %gs
@@ -102,4 +151,3 @@ idt_handler_asmstub:
     popal
     add $8, %esp # skip vector and errcode
     iret
-    

@@ -47,6 +47,8 @@ typedef struct {
 
 typedef struct {
     // pushed by idt_handler_stub
+    uint32_t fsave_ptr; // pointer to start of FXSAVE/FSAVE region
+    uint8_t fsave_buf[464 + 16]; // FXSAVE uses 464 bytes (94/108 bytes for FSAVE), and FXSAVE also requires 16-byte alignment
     uint32_t gs;
     uint32_t fs;
     uint32_t es;
