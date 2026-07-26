@@ -28,7 +28,7 @@ fpu_init:
 
     # FPU exists
     inc %eax # EAX = 1 (was 0 previously if we could get to this point)
-    movl fpu_mode, %eax
+    movl %eax, fpu_mode
 
     # check if CPUID is available; if not then FXSAVE is definitely not available
     pushfl
@@ -40,7 +40,7 @@ fpu_init:
     xor %eax, (%esp) # EAX contains bits that changed
     popfl
     testl $(1 << 21), %eax
-    jnz .fin # ID bit can be changed, so CPUID is not supported
+    jz .fin # ID bit can be changed, so CPUID is not supported
 
     # check if FXSAVE is supported
     pushfl
@@ -49,7 +49,7 @@ fpu_init:
     cpuid
     test $(1 << 24), %edx
     popfl
-    jnz .fin # FXSAVE is not supported
+    jz .fin # FXSAVE is not supported
 
     # FXSAVE is supported - enable it
     movl %cr4, %eax
