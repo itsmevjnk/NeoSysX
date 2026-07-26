@@ -3,6 +3,7 @@
 #include <timing/timer.h>
 #include <cpu/x86_common/io.h>
 #include <drivers/intr/i8259.h>
+#include <tasking/thread.h>
 
 #ifndef PIT_CLOCK_FREQ
 #define PIT_CLOCK_FREQ                              1193182
@@ -31,13 +32,20 @@ static float pit_tick_remainder = 0;
 
 #define PIT_SEND_COMMAND(ch, rw, mode, bcd) outb(PIT_COMMAND, ((ch) << 6) | ((rw) << 4) | ((mode) << 1) | (bcd))
 
-static void pit_handler(uint8_t irq, idt_handler_context_t* context) {
-    (void)irq; (void)context;
-    
+static void pit_pre_yield_cb(void* context, void* cb_param) {
+    (void) context;
+
+    uintptr_t irq = (uintptr_t)cb_param;
+    pic_eoi(irq);
+}
+
+static void pit_handler(uint8_t irq, idt_handler_context_t* context) {    
     pit_tick_remainder += pit_tick_delta;
     uint64_t delta = (uint64_t)pit_tick_remainder;
     pit_tick_remainder -= delta;
     timer_update(delta);
+
+    thread_evaluate_yield(context, pit_pre_yield_cb, (void*)((uintptr_t)irq));
 }
 
 #define PIT_IRQ                             0

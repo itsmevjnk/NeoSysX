@@ -126,18 +126,25 @@ idt_restore_ctx:
     # pop FPU state
     popl %edi # EDI = fsave_buf pointer containing FPU state pushed previously
     movl fpu_mode, %eax
+    cmpl $0, %eax
+    je .fpu_restore_done # unsupported
+
+    cmpl $0, %edi
+    je .finit # no FPU state was saved previously (i.e. new thread) - initialise FPU here
+
     cmpl $2, %eax
     je .fxrstor
     cmpl $1, %eax
     je .frstor
-    # unsupported
-    pushl $0 # fsave_ptr = 0
-    jmp .fpu_restore_done
+    jmp .fpu_restore_done # unknown
 .fxrstor:
     fxrstor (%edi)
     jmp .fpu_restore_done
 .frstor:
     frstor (%edi)
+    jmp .fpu_restore_done
+.finit:
+    fninit
 
 .fpu_restore_done:
     addl $(464 + 16), %esp
