@@ -5,6 +5,7 @@
 #include <timing/timer.h>
 #include <stdlib.h>
 #include <kernel/log.h>
+#include <cpu/intr.h>
 
 thread_tcb_t thread_kernel_tcb = { .proc = &thread_kernel_pcb };
 thread_pcb_t thread_kernel_pcb = { .thread_head = &thread_kernel_tcb };
@@ -127,12 +128,18 @@ thread_tcb_t* thread_new_tcb(thread_pcb_t* pcb, bool user, uintptr_t entry_pc) {
     }
 
     tcb->proc = pcb;
+    thread_init_kernel_stack(tcb, entry_pc, user_sp);
+
+    // TODO: maybe use mutex?
+    INTR_ENSURE_DISABLED_BEGIN
+
     tcb->proc_next = pcb->thread_head;
     pcb->thread_head = tcb;
 
     tcb->sched_next = thread_kernel_tcb.sched_next; 
     thread_kernel_tcb.sched_next = tcb; // schedule after kernel thread
 
-    thread_init_kernel_stack(tcb, entry_pc, user_sp);
+    INTR_ENSURE_DISABLED_END
+
     return tcb;
 }

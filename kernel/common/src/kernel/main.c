@@ -1,5 +1,6 @@
 #include <kernel/main.h>
 #include <kernel/log.h>
+#include <kernel/panic.h>
 #include <cpu/halt.h>
 
 #include <mm/pmm.h>
@@ -20,14 +21,26 @@ __attribute__((weak)) void kinit_target_post(void) {
 }
 
 void test_thread1_entry(void) {
+    static uintptr_t last_sp = 0;
     while (1) {
         putchar('1');
+        uintptr_t sp; __asm__ volatile("mov %%esp, %0" : "=r"(sp));
+        if (!last_sp) last_sp = sp;
+        else if (last_sp != sp) {
+            kpanic();
+        }
     }
 }
 
 void test_thread2_entry(void) {
+    static uintptr_t last_sp = 0;
     while (1) {
         putchar('2');
+        uintptr_t sp; __asm__ volatile("mov %%esp, %0" : "=r"(sp));
+        if (!last_sp) last_sp = sp;
+        else if (last_sp != sp) {
+            kpanic();
+        }
     }
 }
 
