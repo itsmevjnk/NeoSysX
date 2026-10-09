@@ -8,7 +8,7 @@ target_sources(
 )
 target_link_libraries(
     driver_video_vga_text PUBLIC
-    bsp_cpu_x86_common
+    bsp_cpu_x86_common_arch_headers
     kernel_common
 )
 target_include_directories(driver_video_vga_text PUBLIC "include/")

@@ -10,7 +10,7 @@ target_sources(
 target_link_libraries(
     driver_timer_i8253 PUBLIC
     driver_intr_i8259
-    bsp_cpu_x86_common
+    bsp_cpu_x86_common_arch_headers
     bsp_cpu_i386
     kernel_common
 )

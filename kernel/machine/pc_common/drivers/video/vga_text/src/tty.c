@@ -1,5 +1,5 @@
 #include <drivers/video/vga_text.h>
-#include <cpu/x86_common/io.h>
+#include <arch/io.h>
 
 static uint8_t vga_text_tty_x = 0, vga_text_tty_y = 0;
 static uint8_t vga_text_tty_attrib = VGA_TEXT_BG_BLACK | VGA_TEXT_FG_GREY;

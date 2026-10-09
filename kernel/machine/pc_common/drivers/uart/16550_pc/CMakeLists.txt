@@ -12,7 +12,7 @@ target_link_libraries(
     driver_uart_16550_pc PUBLIC
     driver_uart_16550
     driver_uart_16550_term
-    bsp_cpu_x86_common
+    bsp_cpu_x86_common_arch_headers
     kernel_common
 )
 target_include_directories(driver_uart_16550_pc PUBLIC "include/")

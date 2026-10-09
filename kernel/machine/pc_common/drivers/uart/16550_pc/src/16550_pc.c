@@ -1,6 +1,6 @@
 #include <drivers/uart/16550_pc.h>
 #include <drivers/uart/16550_term.h>
-#include <cpu/x86_common/io.h>
+#include <arch/io.h>
 
 uint8_t uart_16550_pc_read(uintptr_t reg) {
     return inb(reg);

@@ -1,7 +1,7 @@
 #include <drivers/timer/i8253.h>
 #include <kernel/log.h>
 #include <timing/timer.h>
-#include <cpu/x86_common/io.h>
+#include <arch/io.h>
 #include <drivers/intr/i8259.h>
 #include <tasking/thread.h>
 

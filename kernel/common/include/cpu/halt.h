@@ -4,7 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if __has_include(<arch/halt.h>)
+#include <arch/halt.h>
+#else
 void cpu_halt(void); // halt until an interrupt is received (HLT in x86, WFI/WFE in ARM)
+#endif
+
 __attribute__((noreturn)) void cpu_reset(void); // reset the CPU using the most basic type of hardware method available (i.e. no ACPI)
 
 #endif /* __CPU_HALT_H */

@@ -1,5 +1,5 @@
 #include <drivers/video/vga_text.h>
-#include <cpu/x86_common/io.h>
+#include <arch/io.h>
 #include <string.h>
 
 uint16_t* vga_text_buffer = NULL;

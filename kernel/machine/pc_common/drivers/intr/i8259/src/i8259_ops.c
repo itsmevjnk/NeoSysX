@@ -1,5 +1,5 @@
 #include <drivers/intr/i8259.h>
-#include <cpu/x86_common/io.h>
+#include <arch/io.h>
 
 #define PIC1_BASE                       0x20
 #define PIC2_BASE                       0xA0

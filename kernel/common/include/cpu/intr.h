@@ -5,10 +5,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#if __has_include(<arch/intr.h>)
+#include <arch/intr.h>
+#else
+
 /* interrupt functionalities to be implemented by the CPU BSP */
 void intr_enable(void);
 void intr_disable(void);
 bool intr_enabled(void);
+
+#endif
 
 /* macros for implementing interrupt disable guard */
 #define INTR_ENSURE_DISABLED_BEGIN \
