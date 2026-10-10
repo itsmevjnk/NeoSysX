@@ -5,36 +5,47 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <algo/dllist.h>
+
 /* process control block */
 struct thread_pcb {
     uintptr_t id; // process ID
     void* vmm_config; // process' VMM config structure pointer (i.e. its address space)
-    struct thread_pcb* next; // next process
-    struct thread_tcb* thread_head; // first TCB within this process
-} __attribute__((packed));
+    
+    dllist_node_t node; // process linked list management node
+    dllist_t thread_list; // linked list of threads in this process
+};
 
 /* thread control block */
 struct thread_tcb {
     uintptr_t id; // thread ID
-    struct thread_pcb* proc; // parent process
-    struct thread_tcb* proc_next; // next thread in the process linked list
-    struct thread_tcb* sched_next; // next thread in the scheduling linked list
+    
+    dllist_node_t proc_node; // node in process thread list
+    // NOTE: the underlying parent process ptr can be inferred as 
+    //       (uintptr_t)proc_node->list - ((uintptr_t)&proc->thread_list - (uintptr_t)proc)
+
+    dllist_node_t sched_node; // node in the scheduling queue
+    
     uintptr_t kernel_sp; // thread's kernel stack pointer (user-space stack pointer is stored within the kernel stack)
     // NOTE: The kernel stack pointer should point to the thread's stack immediately before restoring context.
     //       This way we can execute an interrupt return-style context restore and land at the thread's state prior to
     //       the context switch.
+    
     struct {
         uint8_t priority : 8;
         uint8_t user : 1; // whether this is an user thread
         uint32_t reserved : 23;
     } __attribute__((packed)) attrib;
-} __attribute__((packed));
+};
 
 typedef struct thread_pcb thread_pcb_t;
 typedef struct thread_tcb thread_tcb_t;
 
 extern thread_pcb_t thread_kernel_pcb;
 extern thread_tcb_t thread_kernel_tcb;
+
+extern dllist_t thread_pcb_list;
+extern dllist_t thread_sched_list;
 
 extern thread_tcb_t* thread_current; // currently running thread
 

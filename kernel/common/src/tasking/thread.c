@@ -6,9 +6,13 @@
 #include <stdlib.h>
 #include <kernel/log.h>
 #include <cpu/intr.h>
+#include <string.h>
 
-thread_tcb_t thread_kernel_tcb = { .proc = &thread_kernel_pcb };
-thread_pcb_t thread_kernel_pcb = { .thread_head = &thread_kernel_tcb };
+dllist_t thread_pcb_list = { NULL };
+dllist_t thread_sched_list = { NULL };
+
+thread_tcb_t thread_kernel_tcb = { 0 };
+thread_pcb_t thread_kernel_pcb = { 0 };
 
 #ifndef THREAD_INITIAL_MAX_PROCESSES
 #define THREAD_INITIAL_MAX_PROCESSES 16384
@@ -26,11 +30,16 @@ void thread_init(void) {
     idalloc_init(&thread_pid_allocator);
     idalloc_init(&thread_tid_allocator);
 
+    dllist_insert_head(&thread_pcb_list, &thread_kernel_pcb.node);
+    dllist_insert_head(&thread_kernel_pcb.thread_list, &thread_kernel_tcb.proc_node);
+
     thread_kernel_pcb.id = idalloc_alloc(&thread_pid_allocator);
     thread_kernel_pcb.vmm_config = vmm_get_kernel_config();
 
     thread_kernel_tcb.id = idalloc_alloc(&thread_tid_allocator);
     thread_init_state(); // load kernel SP and context, then perform context switch to land back here
+
+    dllist_insert_head(&thread_sched_list, &thread_kernel_tcb.sched_node);
     thread_current = &thread_kernel_tcb;
 }
 
@@ -38,7 +47,13 @@ static uint64_t thread_prev_yield_tick = 0; // tickstamp of last yield
 
 void thread_yield(void* context) {
     thread_prev_yield_tick = timer_get();    
-    thread_tcb_t* next_thread = (thread_current) ? thread_current->sched_next : NULL;
+    thread_tcb_t* next_thread = NULL;
+    if (thread_current) {
+        dllist_node_t* next_node = dllist_traverse_next(&thread_current->sched_node);
+        if (next_node) {
+            next_thread = (thread_tcb_t*)((uintptr_t)next_node - ((uintptr_t)&thread_current->sched_node - (uintptr_t)thread_current));
+        }
+    }
     thread_switch((next_thread) ? next_thread : &thread_kernel_tcb, context);
     // TODO
 }
@@ -76,9 +91,9 @@ thread_pcb_t* thread_new_pcb(void) {
         return NULL;
     }
 
-    pcb->next = thread_kernel_pcb.next;
-    thread_kernel_pcb.next = pcb->next;
-    pcb->thread_head = NULL;
+    dllist_insert_tail(&thread_pcb_list, &pcb->node);
+    memset(&pcb->thread_list, 0, sizeof(pcb->thread_list));
+    
     return pcb;
 }
 
@@ -127,17 +142,13 @@ thread_tcb_t* thread_new_tcb(thread_pcb_t* pcb, bool user, uintptr_t entry_pc) {
         }
     }
 
-    tcb->proc = pcb;
     thread_init_kernel_stack(tcb, entry_pc, user_sp);
 
     // TODO: maybe use mutex?
     INTR_ENSURE_DISABLED_BEGIN
 
-    tcb->proc_next = pcb->thread_head;
-    pcb->thread_head = tcb;
-
-    tcb->sched_next = thread_kernel_tcb.sched_next; 
-    thread_kernel_tcb.sched_next = tcb; // schedule after kernel thread
+    dllist_insert_tail(&pcb->thread_list, &tcb->proc_node);
+    dllist_insert_tail(&thread_sched_list, &tcb->sched_node);
 
     INTR_ENSURE_DISABLED_END
 

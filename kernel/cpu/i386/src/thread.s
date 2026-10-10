@@ -18,26 +18,27 @@ thread_switch:
     cmpl $0, %eax
     jz .first_save
 .save_ctx: # save context for thread_current
-    movl %edx, 16(%eax)
+    movl %edx, 28(%eax)
     jmp .save_done
 .first_save: # special case - save context into kernel thread (which is also passed in ECX)
-    movl %edx, 16(%ecx)
+    movl %edx, 28(%ecx)
 .save_done:
     movl %ecx, thread_current # update current thread
 
     # switch VMM config - this is essentially an alternative fully-ASM implementation of vmm_switch
     movl vmm_current_config, %edx
-    movl 4(%ecx), %eax # thread->proc
-    movl 4(%eax), %eax # thread->proc->vmm_config
+    movl 4(%ecx), %eax # thread->proc_node.list (aka &proc.thread_list)
+    subl $(4 * (3 + 1)), %eax # &proc.vmm_config
+    movl (%eax), %eax # proc.vmm_config
     cmpl %edx, %eax
     je .vmm_done # same configuration - avoid switching which will cause TLB flush
-    movl 8192(%eax), %eax # thread->proc->vmm_config->cr3
+    movl 8192(%eax), %eax # proc.vmm_config->cr3
     movl %eax, %cr3
     # since all our data is in the synchronised kernel space, we should be able to survive this switch
 .vmm_done:
 
     # restore context
-    movl 16(%ecx), %esp # thread->kernel_sp
+    movl 28(%ecx), %esp # thread->kernel_sp
     # TODO: set ESP0 to end of idt_context_t struct for user threads
 
     jmp idt_restore_ctx # reuse IDT handler's restoration function for this
