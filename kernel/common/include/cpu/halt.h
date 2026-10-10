@@ -7,6 +7,7 @@
 #if __has_include(<arch/halt.h>)
 #include <arch/halt.h>
 #else
+void cpu_spin(void); // no-op operation hinting that the CPU is busy in a spin-wait loop
 void cpu_halt(void); // halt until an interrupt is received (HLT in x86, WFI/WFE in ARM)
 #endif
 
